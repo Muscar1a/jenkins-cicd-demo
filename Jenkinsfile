@@ -1,20 +1,20 @@
 pipeline {
-    agent any 
+    agent any
     
     environment {
         DOCKER_IMAGE = "muscarias/iris-ml-api"
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKER_CREDENTIALS_ID = "dockerhub-credentials"
     }
-
+    
     stages {
-        stage("Checkout") {
+        stage('Checkout') {
             steps {
-                echo 'Checking out code from Github...'
+                echo 'Checking out code from GitHub...'
                 checkout scm
             }
         }
-     
+        
         stage('Setup Python Environment') {
             steps {
                 echo 'Setting up Python environment...'
@@ -26,17 +26,19 @@ pipeline {
                 '''
             }
         }
-
+        
         stage('Train Model') {
             steps {
                 echo 'Training ML model...'
                 sh '''
                     . venv/bin/activate
-                    pytest tests/test_model.py -v --tb=short
+                    cd src
+                    python train_model.py
+                    cd ..
                 '''
             }
         }
-
+        
         stage('Test Model') {
             steps {
                 echo 'Testing model training and predictions...'
@@ -46,7 +48,7 @@ pipeline {
                 '''
             }
         }
-
+        
         stage('Test API') {
             steps {
                 echo 'Testing FastAPI application...'
@@ -56,7 +58,7 @@ pipeline {
                 '''
             }
         }
-
+        
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image...'
@@ -66,7 +68,7 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Push to Docker Hub') {
             steps {
                 echo 'Pushing to Docker Hub...'
@@ -78,7 +80,7 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Cleanup') {
             steps {
                 echo 'Cleaning up...'
@@ -90,7 +92,7 @@ pipeline {
             }
         }
     }
-
+    
     post {
         success {
             echo 'Pipeline completed successfully!'
@@ -104,11 +106,4 @@ pipeline {
             cleanWs()
         }
     }
-    
-
-    
-
-        
-
-
 }
